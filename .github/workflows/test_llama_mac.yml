@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4  # Latest version for efficiency
+      uses: actions/checkout@v4
 
     - name: Clone llama.cpp repository
       run: |
@@ -25,7 +25,13 @@ jobs:
     - name: Set up environment
       run: |
         brew update
-        brew install cmake gcc wget libomp  # Install dependencies
+        brew install cmake gcc wget libomp
+
+    - name: Download model file
+      run: |
+        mkdir -p llama.cpp/models/deepseek-r1-distill
+        cd llama.cpp/models/deepseek-r1-distill
+        wget -O DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
 
     - name: Build llama.cpp
       run: |
@@ -33,7 +39,7 @@ jobs:
         mkdir -p build && cd build
         cmake ..
         cmake --build . --parallel $(sysctl -n hw.ncpu)
-        ls -la bin  # Verify the binary directory exists
+        ls -la bin
 
     - name: Verify if llama-run is built
       run: |
