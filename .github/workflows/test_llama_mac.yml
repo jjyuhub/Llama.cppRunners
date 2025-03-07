@@ -3,7 +3,7 @@ name: Build and Test llama.cpp on macOS
 on:
   push:
     branches:
-      - main
+      - macos-13
   pull_request:
     branches:
       - main
