@@ -78,18 +78,23 @@ jobs:
             echo "Running llama-run with max CPU usage..."
             START_TIME=$(date +%s)
 
-            ./bin/llama-run \
-              --model file://$MODEL_PATH \
+            ./bin/llama-run "$MODEL_PATH" \
+              -p "What are the practical applications of Llama.cpp in real-world AI projects?" \
               --threads $(sysctl -n hw.ncpu) \
               --temp 0.7 \
               --top_k 40 \
               --top_p 0.9 \
               --repeat_penalty 1.2 \
-              --n_predict 128 \
-              -p "What are the practical applications of Llama.cpp in real-world AI projects?"
+              --n_predict 128 
 
             END_TIME=$(date +%s)
             echo "Execution time: $((END_TIME - START_TIME)) seconds"
+
+          else
+            echo "ERROR: Either llama-run or the model file is missing!"
+            exit 1
+          fi
+
 
           else
             echo "ERROR: Either llama-run or the model file is missing!"
