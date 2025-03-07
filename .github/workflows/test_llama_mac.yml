@@ -30,7 +30,7 @@ jobs:
         git clone https://github.com/ggerganov/llama.cpp.git
         cd llama.cpp
         git submodule update --init --recursive
-
+        
     - name: Build Llama.cpp
       run: |
         cd llama.cpp
@@ -38,7 +38,8 @@ jobs:
         cd build
         cmake ..
         cmake --build . --parallel $(sysctl -n hw.ncpu)
-
+        ls -la ./bin  # Verify that the binary exists
+    
     - name: Download Model (skip if no token is required)
       run: |
         mkdir -p ~/llama.cpp/models/deepseek-r1-distill/
@@ -48,4 +49,7 @@ jobs:
     - name: Run Inference
       run: |
         cd llama.cpp
-        ./bin/llama-run file://models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "What is DeepSeek R1?"
+        ls
+        ls -la ./bin/llama-run 
+        ls -la ./build/bin/llama-run 
+        ./build/bin/llama-run file://models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "What is DeepSeek R1?"
