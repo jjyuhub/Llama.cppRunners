@@ -6,7 +6,9 @@ on:
       - macos-13
   pull_request:
     branches:
-      - main
+      - macos-13
+  workflow_dispatch:  # Manual trigger
+
 
 jobs:
   build-and-test:
