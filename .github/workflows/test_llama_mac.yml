@@ -69,33 +69,14 @@ jobs:
           echo "### Listing bin directory"
           ls -lah $GITHUB_WORKSPACE/llama.cpp/build/bin
 
-      - name: Run llama with max CPU usage
+      - name: Run llama with test prompt
         run: |
           cd $GITHUB_WORKSPACE/llama.cpp/build
           MODEL_PATH="$GITHUB_WORKSPACE/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
 
           if [ -f "./bin/llama-run" ] && [ -f "$MODEL_PATH" ]; then
-            echo "Running llama-run with max CPU usage..."
-            START_TIME=$(date +%s)
-
-            ./bin/llama-run "$MODEL_PATH" \
-              -p "What are the practical applications of Llama.cpp in real-world AI projects?" \
-              --threads $(sysctl -n hw.ncpu) \
-              --temp 0.7 \
-              --top_k 40 \
-              --top_p 0.9 \
-              --repeat_penalty 1.2 \
-              --n_predict 128 
-
-            END_TIME=$(date +%s)
-            echo "Execution time: $((END_TIME - START_TIME)) seconds"
-
-          else
-            echo "ERROR: Either llama-run or the model file is missing!"
-            exit 1
-          fi
-
-
+            echo "Running llama-run..."
+            ./bin/llama-run file://$MODEL_PATH "What is llama.cpp?"
           else
             echo "ERROR: Either llama-run or the model file is missing!"
             exit 1
