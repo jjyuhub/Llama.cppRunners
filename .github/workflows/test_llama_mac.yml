@@ -14,7 +14,12 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2  # This step clones the current repository
+
+    - name: Clone llama.cpp repository
+      run: |
+        git clone https://github.com/your-username/llama.cpp.git  # Replace with actual repository URL
+        cd llama.cpp  # Navigate into the cloned llama.cpp directory
 
     - name: Set up environment
       run: |
@@ -26,11 +31,13 @@ jobs:
 
     - name: Build llama.cpp
       run: |
+        # Navigate to the llama.cpp directory
+        cd $GITHUB_WORKSPACE/llama.cpp  # Ensure we're in the correct directory
         mkdir -p build
         cd build
-        cmake ..
-        cmake --build . --parallel $(sysctl -n hw.ncpu)  # Uses all available CPU cores
-        ls -la  # List all files in build directory to verify if llama-run is present
+        cmake ..  # Run cmake from the build directory
+        cmake --build . --parallel $(sysctl -n hw.ncpu)  # Build with parallel jobs
+        ls -la  # List all files in the build directory
 
     - name: Verify if llama-run is built
       run: |
