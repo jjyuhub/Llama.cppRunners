@@ -76,7 +76,7 @@ jobs:
 
           if [ -f "./bin/llama-run" ] && [ -f "$MODEL_PATH" ]; then
             echo "Running llama-run..."
-            ./bin/llama-run file://$MODEL_PATH "What is llama.cpp?"
+            ./bin/llama-run file://$MODEL_PATH "What is DeepSeek R1?"
           else
             echo "ERROR: Either llama-run or the model file is missing!"
             exit 1
