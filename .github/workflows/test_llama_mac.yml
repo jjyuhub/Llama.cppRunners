@@ -5,72 +5,79 @@ on:
     branches:
       - main
   pull_request:
-    branches:
-      - main
+      branches:
+        - main
 
 jobs:
   build-and-test:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Clone llama.cpp repository
-      run: |
-        git clone https://github.com/ggml-org/llama.cpp.git
-        cd llama.cpp
-        git submodule update --init --recursive
+      - name: Clone llama.cpp repository
+        run: |
+          git clone https://github.com/ggml-org/llama.cpp.git
+          cd llama.cpp
+          git submodule update --init --recursive
 
-    - name: Set up environment
-      run: |
-        brew update
-        brew install cmake gcc wget libomp
+      - name: Set up environment
+        run: |
+          brew update
+          brew install cmake gcc wget libomp
 
-    - name: Download model file
-      run: |
-        mkdir -p llama.cpp/models/deepseek-r1-distill
-        cd llama.cpp/models/deepseek-r1-distill
-        wget -O DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
+      - name: Download model file
+        run: |
+          mkdir -p $HOME/llama.cpp/models/deepseek-r1-distill
+          cd $HOME/llama.cpp/models/deepseek-r1-distill
+          wget -O DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
 
-    - name: Build llama.cpp
-      run: |
-        cd llama.cpp
-        mkdir -p build && cd build
-        cmake ..
-        cmake --build . --parallel $(sysctl -n hw.ncpu)
-        ls -la bin  # Ensure binaries exist
+          # Verify model download
+          echo "Checking if model file exists..."
+          ls -lah $HOME/llama.cpp/models/deepseek-r1-distill
 
-    - name: Verify if llama-run is built
-      run: |
-        if [ -f "llama.cpp/build/bin/llama-run" ]; then
-          echo "llama-run is built successfully."
-        else
-          echo "llama-run not found. Build might have failed."
-          exit 1
-        fi
+      - name: Build llama.cpp
+        run: |
+          cd $HOME/llama.cpp
+          mkdir -p build && cd build
+          cmake ..
+          cmake --build . --parallel $(sysctl -n hw.ncpu)
+          ls -lah bin  # Ensure binaries exist
 
-    - name: Debug List directory contents
-      run: |
-        echo "### Listing root directory"
-        ls -la
-        echo "### Listing llama.cpp directory"
-        ls -la llama.cpp
-        echo "### Listing models directory"
-        ls -la llama.cpp/models
-        echo "### Listing deepseek-r1-distill directory"
-        ls -la llama.cpp/models/deepseek-r1-distill
-        echo "### Listing build directory"
-        ls -la llama.cpp/build
-        echo "### Listing bin directory"
-        ls -la llama.cpp/build/bin
+      - name: Verify if llama-run is built
+        run: |
+          if [ -f "$HOME/llama.cpp/build/bin/llama-run" ]; then
+            echo "llama-run is built successfully."
+          else
+            echo "llama-run not found. Build might have failed."
+            exit 1
+          fi
 
-    - name: Run llama with test prompt
-      run: |
-        cd llama.cpp/build
-        if [ -f "./bin/llama-run" ]; then
-          ./bin/llama-run file://$HOME/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "How is llama.cpp?"
-        else
-          echo "llama-run not found. Skipping test."
-          exit 1
-        fi
+      - name: Debug directory structure
+        run: |
+          echo "### Listing root directory"
+          ls -lah
+          echo "### Listing llama.cpp directory"
+          ls -lah $HOME/llama.cpp
+          echo "### Listing models directory"
+          ls -lah $HOME/llama.cpp/models
+          echo "### Listing deepseek-r1-distill directory"
+          ls -lah $HOME/llama.cpp/models/deepseek-r1-distill
+          echo "### Listing build directory"
+          ls -lah $HOME/llama.cpp/build
+          echo "### Listing bin directory"
+          ls -lah $HOME/llama.cpp/build/bin
+
+      - name: Run llama with test prompt
+        run: |
+          cd $HOME/llama.cpp/build
+          MODEL_PATH="$HOME/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
+
+          if [ -f "./bin/llama-run" ] && [ -f "$MODEL_PATH" ]; then
+            echo "Running llama-run..."
+            ./bin/llama-run file://$MODEL_PATH "How is llama.cpp?"
+          else
+            echo "ERROR: Either llama-run or the model file is missing!"
+            exit 1
+          fi
