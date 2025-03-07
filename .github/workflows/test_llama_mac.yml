@@ -50,7 +50,7 @@ jobs:
           exit 1
         fi
 
-    - name: Debug: List directory contents
+    - name: Debug List directory contents
       run: |
         echo "### Listing root directory"
         ls -la
