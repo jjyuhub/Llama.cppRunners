@@ -17,38 +17,35 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up Homebrew
-      id: set-up-homebrew
-      uses: Homebrew/actions/setup-homebrew@master
-
-    - name: Cache Homebrew Packages
-      id: cache
-      uses: actions/cache@v3
-      with:
-        path: |
-          /usr/local/Homebrew
-          /usr/local/Cellar
-          /usr/local/Caskroom
-          /usr/local/var/homebrew/linked
-        key: ${{ runner.os }}-brew-${{ steps.set-up-homebrew.outputs.cache-key }}
-        restore-keys: ${{ runner.os }}-brew-
+      run: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        brew update
 
     - name: Install Dependencies
       run: |
         brew install cmake gcc wget libomp
 
-    - name: Build llama.cpp
+    - name: Download Llama.cpp
       run: |
+        git clone https://github.com/ggerganov/llama.cpp.git
+        cd llama.cpp
+        git submodule update --init --recursive
+
+    - name: Build Llama.cpp
+      run: |
+        cd llama.cpp
         mkdir -p build
         cd build
         cmake ..
         cmake --build . --parallel $(sysctl -n hw.ncpu)
 
-    - name: Download Model
+    - name: Download Model (skip if no token is required)
       run: |
-        mkdir -p models/deepseek-r1-distill/
+        mkdir -p ~/llama.cpp/models/deepseek-r1-distill/
         wget "https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf" \
-        -O models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf
+        -O ~/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf
 
     - name: Run Inference
       run: |
-        ./build/bin/main -m models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf -p "What is DeepSeek R1?"
+        cd llama.cpp
+        ./bin/llama-run file://models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "What is DeepSeek R1?"
