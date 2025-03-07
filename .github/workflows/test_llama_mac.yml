@@ -1,0 +1,46 @@
+name: Llama.cpp Test on macOS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Homebrew
+      run: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        brew update
+
+    - name: Install Dependencies
+      run: |
+        brew install cmake
+        brew install gcc
+        brew install wget
+        brew install libomp  # Optional if OpenMP support is needed
+
+    - name: Build llama.cpp
+      run: |
+        mkdir -p build
+        cd build
+        cmake ..
+        cmake --build . --parallel $(sysctl -n hw.ncpu)  # Uses all available CPU cores
+
+    - name: Download Model
+      run: |
+        mkdir -p ~/llama.cpp/models/deepseek-r1-distill/
+        wget "https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf" \
+        -O ~/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf
+
+    - name: Run Inference
+      run: |
+        ./bin/llama-run file://~/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "What is DeepSeek R1?"
