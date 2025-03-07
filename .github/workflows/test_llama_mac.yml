@@ -1,4 +1,4 @@
-name: Build and Test Llama.cpp on macOS
+name: Build and Test llama.cpp on macOS
 
 on:
   push:
@@ -14,12 +14,13 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # This step clones the current repository
+      uses: actions/checkout@v2  # Clones the current repository
 
     - name: Clone llama.cpp repository
       run: |
-        git clone https://github.com/your-username/llama.cpp.git  # Replace with actual repository URL
-        cd llama.cpp  # Navigate into the cloned llama.cpp directory
+        git clone https://github.com/ggml-org/llama.cpp.git  # Clones the official llama.cpp repository
+        cd llama.cpp
+        git submodule update --init --recursive  # Initializes and updates submodules if any
 
     - name: Set up environment
       run: |
@@ -32,29 +33,28 @@ jobs:
     - name: Build llama.cpp
       run: |
         # Navigate to the llama.cpp directory
-        cd $GITHUB_WORKSPACE/llama.cpp  # Ensure we're in the correct directory
+        cd $GITHUB_WORKSPACE/llama.cpp
         mkdir -p build
         cd build
-        cmake ..  # Run cmake from the build directory
-        cmake --build . --parallel $(sysctl -n hw.ncpu)  # Build with parallel jobs
-        ls -la  # List all files in the build directory
+        cmake ..  # Configure the project
+        cmake --build . --parallel $(sysctl -n hw.ncpu)  # Build with all available CPU cores
+        ls -la  # List files to verify build
 
     - name: Verify if llama-run is built
       run: |
-        # Search for llama-run binary in the build directory
-        find . -name "llama-run"
-        ls -la ./build  # List contents of the build directory
-        ls -la ./build/bin  # List the bin directory to check if llama-run is there
-
-    - name: Set execute permissions for llama-run (if found)
-      run: |
-        chmod +x ./build/bin/llama-run || echo "llama-run not found, skipping permission change"
+        # Check if llama-run binary exists
+        if [ -f ./build/bin/llama-run ]; then
+          echo "llama-run is built successfully."
+        else
+          echo "llama-run not found. Build might have failed."
+          exit 1
+        fi
 
     - name: Run llama with test prompt
       run: |
-        # Assuming llama-run is located in ./build/bin/
+        # Run a test if llama-run exists
         if [ -f ./build/bin/llama-run ]; then
           ./build/bin/llama-run file://models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "What is DeepSeek R1?"
         else
-          echo "llama-run not found. Build might have failed."
+          echo "llama-run not found. Skipping test."
         fi
