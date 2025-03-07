@@ -5,8 +5,8 @@ on:
     branches:
       - main
   pull_request:
-      branches:
-        - main
+    branches:
+      - main
 
 jobs:
   build-and-test:
@@ -18,8 +18,8 @@ jobs:
 
       - name: Clone llama.cpp repository
         run: |
-          git clone https://github.com/ggml-org/llama.cpp.git
-          cd llama.cpp
+          git clone https://github.com/ggml-org/llama.cpp.git $GITHUB_WORKSPACE/llama.cpp
+          cd $GITHUB_WORKSPACE/llama.cpp
           git submodule update --init --recursive
 
       - name: Set up environment
@@ -29,17 +29,17 @@ jobs:
 
       - name: Download model file
         run: |
-          mkdir -p $HOME/llama.cpp/models/deepseek-r1-distill
-          cd $HOME/llama.cpp/models/deepseek-r1-distill
+          mkdir -p $GITHUB_WORKSPACE/llama.cpp/models/deepseek-r1-distill
+          cd $GITHUB_WORKSPACE/llama.cpp/models/deepseek-r1-distill
           wget -O DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
 
           # Verify model download
           echo "Checking if model file exists..."
-          ls -lah $HOME/llama.cpp/models/deepseek-r1-distill
+          ls -lah $GITHUB_WORKSPACE/llama.cpp/models/deepseek-r1-distill
 
       - name: Build llama.cpp
         run: |
-          cd $HOME/llama.cpp
+          cd $GITHUB_WORKSPACE/llama.cpp
           mkdir -p build && cd build
           cmake ..
           cmake --build . --parallel $(sysctl -n hw.ncpu)
@@ -47,7 +47,7 @@ jobs:
 
       - name: Verify if llama-run is built
         run: |
-          if [ -f "$HOME/llama.cpp/build/bin/llama-run" ]; then
+          if [ -f "$GITHUB_WORKSPACE/llama.cpp/build/bin/llama-run" ]; then
             echo "llama-run is built successfully."
           else
             echo "llama-run not found. Build might have failed."
@@ -59,20 +59,20 @@ jobs:
           echo "### Listing root directory"
           ls -lah
           echo "### Listing llama.cpp directory"
-          ls -lah $HOME/llama.cpp
+          ls -lah $GITHUB_WORKSPACE/llama.cpp
           echo "### Listing models directory"
-          ls -lah $HOME/llama.cpp/models
+          ls -lah $GITHUB_WORKSPACE/llama.cpp/models
           echo "### Listing deepseek-r1-distill directory"
-          ls -lah $HOME/llama.cpp/models/deepseek-r1-distill
+          ls -lah $GITHUB_WORKSPACE/llama.cpp/models/deepseek-r1-distill
           echo "### Listing build directory"
-          ls -lah $HOME/llama.cpp/build
+          ls -lah $GITHUB_WORKSPACE/llama.cpp/build
           echo "### Listing bin directory"
-          ls -lah $HOME/llama.cpp/build/bin
+          ls -lah $GITHUB_WORKSPACE/llama.cpp/build/bin
 
       - name: Run llama with test prompt
         run: |
-          cd $HOME/llama.cpp/build
-          MODEL_PATH="$HOME/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
+          cd $GITHUB_WORKSPACE/llama.cpp/build
+          MODEL_PATH="$GITHUB_WORKSPACE/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
 
           if [ -f "./bin/llama-run" ] && [ -f "$MODEL_PATH" ]; then
             echo "Running llama-run..."
