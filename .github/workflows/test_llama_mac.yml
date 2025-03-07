@@ -14,36 +14,30 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Clones the current repository
+      uses: actions/checkout@v4  # Latest version for efficiency
 
     - name: Clone llama.cpp repository
       run: |
-        git clone https://github.com/ggml-org/llama.cpp.git  # Clones the official llama.cpp repository
+        git clone https://github.com/ggml-org/llama.cpp.git
         cd llama.cpp
-        git submodule update --init --recursive  # Initializes and updates submodules if any
+        git submodule update --init --recursive
 
     - name: Set up environment
       run: |
-        # Install dependencies
-        brew install cmake
-        brew install gcc
-        brew install wget
-        brew install libomp
+        brew update
+        brew install cmake gcc wget libomp  # Install dependencies
 
     - name: Build llama.cpp
       run: |
-        # Navigate to the llama.cpp directory
-        cd $GITHUB_WORKSPACE/llama.cpp
-        mkdir -p build
-        cd build
-        cmake ..  # Configure the project
-        cmake --build . --parallel $(sysctl -n hw.ncpu)  # Build with all available CPU cores
-        ls -la  # List files to verify build
+        cd llama.cpp
+        mkdir -p build && cd build
+        cmake ..
+        cmake --build . --parallel $(sysctl -n hw.ncpu)
+        ls -la bin  # Verify the binary directory exists
 
     - name: Verify if llama-run is built
       run: |
-        # Check if llama-run binary exists
-        if [ -f ./build/bin/llama-run ]; then
+        if [ -f "llama.cpp/build/bin/llama-run" ]; then
           echo "llama-run is built successfully."
         else
           echo "llama-run not found. Build might have failed."
@@ -52,9 +46,10 @@ jobs:
 
     - name: Run llama with test prompt
       run: |
-        # Run a test if llama-run exists
-        if [ -f ./build/bin/llama-run ]; then
-          ./build/bin/llama-run file://models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "What is DeepSeek R1?"
+        cd llama.cpp/build
+        if [ -f "./bin/llama-run" ]; then
+          ./bin/llama-run file://$HOME/llama.cpp/models/deepseek-r1-distill/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf "How is llama.cpp?"
         else
           echo "llama-run not found. Skipping test."
+          exit 1
         fi
