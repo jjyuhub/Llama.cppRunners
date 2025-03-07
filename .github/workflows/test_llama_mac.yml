@@ -39,7 +39,7 @@ jobs:
         mkdir -p build && cd build
         cmake ..
         cmake --build . --parallel $(sysctl -n hw.ncpu)
-        ls -la bin
+        ls -la bin  # Ensure binaries exist
 
     - name: Verify if llama-run is built
       run: |
@@ -49,6 +49,21 @@ jobs:
           echo "llama-run not found. Build might have failed."
           exit 1
         fi
+
+    - name: Debug: List directory contents
+      run: |
+        echo "### Listing root directory"
+        ls -la
+        echo "### Listing llama.cpp directory"
+        ls -la llama.cpp
+        echo "### Listing models directory"
+        ls -la llama.cpp/models
+        echo "### Listing deepseek-r1-distill directory"
+        ls -la llama.cpp/models/deepseek-r1-distill
+        echo "### Listing build directory"
+        ls -la llama.cpp/build
+        echo "### Listing bin directory"
+        ls -la llama.cpp/build/bin
 
     - name: Run llama with test prompt
       run: |
